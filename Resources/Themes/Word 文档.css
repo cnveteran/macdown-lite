@@ -1,0 +1,226 @@
+/* Word 文档 — 模拟 Microsoft Word 的页面视图与中文正文排版
+ *
+ * 设计要点（全部对齐 Word 的中文默认行为）：
+ *   · 页面模型：白纸 + 灰底 + 阴影，A4 比例，Word 中文默认页边距
+ *   · 正文：宋体 + Times New Roman，小四(12pt)，1.5 倍行距，首行缩进 2 字符
+ *   · 两端对齐 + 中文禁则处理（line-break: strict）
+ *   · 标题：Word 内置"标题 1/2/3"的蓝色主题色
+ *   · 表格：网格型（浅色）—— 表头浅蓝底、细边框
+ *   · 超链接：Word 的 Hyperlink 蓝 #0563C1
+ */
+
+/* ============ 页面（纸张）模型 —— 仅屏幕 ============
+ * 刻意用 @media screen 包住：打印时这套"纸张"外观完全不参与分页，
+ * 页面交给 @page 与打印样式处理，任何引擎的打印媒体实现差异都不会
+ * 影响分页结果。
+ */
+
+@media screen {
+  html {
+    background: #9a9a9a;           /* Word 页面视图的灰底 */
+    padding: 0;
+    margin: 0;
+    height: auto;
+  }
+
+  body {
+    box-sizing: border-box;
+    width: 21cm;                    /* A4 宽 */
+    min-height: 29.7cm;             /* A4 高，内容多则向下生长 */
+    margin: 22px auto;
+    padding: 2.54cm 3.17cm;         /* Word 中文默认页边距 */
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.25), 0 10px 28px rgba(0,0,0,.20);
+  }
+}
+
+/* 正文排版（屏幕与打印通用） */
+body {
+  font-family: "Songti SC", "STSong", "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 1.62;
+  color: #000000;
+  text-align: justify;
+  text-justify: inter-ideograph;
+  line-break: strict;               /* 中文行首行尾禁则 */
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: auto;
+}
+
+/* 正文段落：首行缩进 2 字符（仅限正文，不影响列表/表格/引用内） */
+body > p {
+  margin: 0 0 .5em 0;
+  text-indent: 2em;
+}
+/* 紧跟在标题后的引导句、以及图片段落，不缩进更自然 */
+body > p:has(> img), body > p:has(> a > img) { text-indent: 0; }
+body > p:empty { display: none; }
+
+/* ============ 标题：Word「标题 1/2/3」样式 ============ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Heiti SC", "PingFang SC", "Songti SC", "Microsoft YaHei", sans-serif;
+  font-weight: bold;
+  line-height: 1.35;
+  text-align: left;
+  text-indent: 0;
+  border: none;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+h1 {
+  font-size: 20pt;
+  color: #1F3864;                   /* Word 深蓝 */
+  margin: 0 0 14pt 0;
+  padding: 0 0 .2em 0;
+  border-bottom: 1.5pt solid #1F3864;
+}
+body > h1:first-child { margin-top: 0; }
+
+h2 {
+  font-size: 15pt;
+  color: #2E74B5;
+  margin: 18pt 0 8pt 0;
+}
+
+h3 {
+  font-size: 13pt;
+  color: #2E74B5;
+  margin: 14pt 0 6pt 0;
+}
+
+h4, h5, h6 {
+  font-size: 12pt;
+  color: #333333;
+  margin: 12pt 0 4pt 0;
+}
+
+/* ============ 超链接：Word Hyperlink 样式 ============ */
+
+a {
+  color: #0563C1;
+  text-decoration: underline;
+}
+a:visited { color: #954F72; }
+a:hover { color: #034EA2; }
+
+/* ============ 列表 ============ */
+
+ul, ol {
+  margin: .4em 0 .8em 0;
+  padding-left: 2.2em;
+  text-indent: 0;
+  text-align: left;
+}
+li { margin: .15em 0; }
+li > p { text-indent: 0; margin: .15em 0; }
+ul ul, ol ol, ul ol, ol ul { margin: .15em 0; }
+
+/* 任务列表 */
+.task-list-item { list-style: none; margin-left: -1.4em; }
+.task-list-item > input[type="checkbox"] { margin-right: .45em; vertical-align: .08em; }
+
+/* ============ 表格：Word「网格型（浅色）」 ============ */
+
+table {
+  border-collapse: collapse;
+  margin: .8em auto;                /* Word 表格默认居中 */
+  font-size: 10.5pt;                /* 五号 */
+  line-height: 1.45;
+  text-indent: 0;
+  width: auto;
+  max-width: 100%;
+}
+table th, table td {
+  border: .75pt solid #8EAADB;
+  padding: 3pt 8pt;
+  vertical-align: middle;
+  text-align: left;
+  text-indent: 0;
+}
+table thead th, table tr:first-child th {
+  background: #D9E2F3;              /* Word 浅蓝表头 */
+  font-weight: bold;
+  text-align: center;
+}
+table tr:nth-child(even) td { background: #F7F9FC; }
+
+/* ============ 引用：Word「引用」样式 ============ */
+
+blockquote {
+  margin: .8em 0;
+  padding: .2em 0 .2em 1em;
+  border-left: 3pt solid #BFBFBF;
+  color: #404040;
+  text-indent: 0;
+  text-align: left;
+}
+blockquote > :first-child { margin-top: 0; }
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ============ 代码：Word「代码」样式（Consolas + 底纹） ============ */
+
+code, tt, kbd, samp {
+  font-family: Consolas, Menlo, Monaco, "Courier New", monospace;
+  font-size: 10.5pt;
+  background: #F2F2F2;
+  border: .5pt solid #D9D9D9;
+  border-radius: 2px;
+  padding: 0 .25em;
+}
+pre {
+  background: #F7F7F7;
+  border: .75pt solid #D9D9D9;
+  border-radius: 3px;
+  padding: 8pt 10pt;
+  margin: .8em 0;
+  line-height: 1.45;
+  text-indent: 0;
+  text-align: left;
+  overflow-x: auto;
+}
+pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 10.5pt;
+}
+
+/* ============ 图片 / 公式 / 分隔线 ============ */
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+p > img { display: block; margin: .6em auto; }
+
+mjx-container[display="true"] { margin: .8em 0; }
+
+hr {
+  border: none;
+  border-top: .75pt solid #BFBFBF;
+  margin: 1.2em 0;
+}
+
+/* 脚注 */
+.footnotes {
+  font-size: 10.5pt;
+  color: #404040;
+  border-top: .75pt solid #D9D9D9;
+  margin-top: 1.6em;
+  padding-top: .6em;
+}
+.footnotes ol { padding-left: 1.6em; }
+
+/* ============ 窄窗口：让纸张自适应，避免横向滚动 ============ */
+
+@media screen and (max-width: 900px) {
+  body {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 20px 22px;
+    box-shadow: none;
+  }
+}
