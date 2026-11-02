@@ -1,0 +1,10 @@
+# 内置的第三方源码与资源不计入 GitHub 语言统计，
+# 以免这个 Swift 项目被识别成 C。
+Sources/choedown/*    linguist-vendored
+Resources/prism/*     linguist-vendored
+Resources/mathjax/*   linguist-vendored
+Resources/Themes/*    linguist-vendored
+docs/*                linguist-documentation
+
+# 保持跨平台一致的行尾
+* text=auto eol=lf
