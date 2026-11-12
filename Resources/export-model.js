@@ -16,6 +16,20 @@
 
   function isBlock(el) { return BLOCK_TAGS.indexOf(el.tagName) !== -1; }
 
+  // Elements that never carry document content. <script> matters most: the
+  // preview page ends with MathJax/Prism bootstrap code, and without this the
+  // exporter happily turned that JavaScript into body paragraphs.
+  var SKIP_TAGS = { SCRIPT:1, STYLE:1, NOSCRIPT:1, TEMPLATE:1, LINK:1, META:1,
+                    BASE:1, HEAD:1, TITLE:1, IFRAME:1, OBJECT:1, EMBED:1,
+                    PARAM:1, SOURCE:1, TRACK:1, CANVAS:1, MAP:1, AREA:1 };
+
+  function isSkipped(el) {
+    if (SKIP_TAGS[el.tagName]) return true;
+    // Respect what the page actually renders (hidden previews, collapsed UI).
+    var cs = window.getComputedStyle(el);
+    return cs.display === 'none' || cs.visibility === 'hidden';
+  }
+
   function collapsed(text) {
     // Mirror HTML whitespace collapsing so Word output matches the screen.
     return text.replace(/[\t\n\r ]+/g, ' ');
@@ -33,6 +47,7 @@
         continue;
       }
       if (n.nodeType !== 1) continue;
+      if (isSkipped(n)) continue;
 
       var tag = n.tagName;
 
@@ -98,6 +113,7 @@
     for (var i = 0; i < kids.length; i++) {
       var el = kids[i];
       if (el.nodeType !== 1) continue;
+      if (isSkipped(el)) continue;
       if (!isBlock(el)) {           // stray inline content: treat as paragraph
         var runs = [];
         inline(el, {}, runs);

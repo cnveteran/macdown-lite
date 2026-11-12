@@ -134,7 +134,18 @@ final class Probe: NSObject, WKNavigationDelegate {
             } else { check("numbering.xml 可读", false) }
             if !(model?.math.isEmpty ?? true) {
                 check("含公式图片", text.contains("<w:drawing>"))
+            } else {
+                check("含公式图片", true)   // 文档无公式时跳过
             }
+
+            // Regression: the preview page ends with MathJax/Prism bootstrap
+            // <script> blocks. They must never be exported as body text.
+            for marker in ["MacDownLiteMath", "Prism.highlightAll", "MathJax.startup",
+                           "typesetPromise", "console.error", "dollarDelimiter"] {
+                check("不含脚本文本 \(marker)", !text.contains(marker))
+            }
+            check("不含 JS 关键字 window.", !text.contains("window."))
+            check("不含 JS 函数声明", !text.contains("function ()"))
         }
         for part in ["word/styles.xml", "word/numbering.xml"] {
             if let d = zipEntry(docx, named: part) {
